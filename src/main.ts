@@ -51,7 +51,7 @@ function initializeAPM(configService: ConfigService, nodeEnv: string): void {
     const apmSecretToken = configService.get('APM_SECRET_TOKEN');
     if (apmServerUrl && apmSecretToken) {
       apm.start({
-        serviceName: 'service-marketplace-api',
+        serviceName: 'mini-e-com-api',
         secretToken: apmSecretToken,
         serverUrl: apmServerUrl,
         environment: nodeEnv,
@@ -114,7 +114,7 @@ function setupSwagger(app: any, nodeEnv: string, port: number): void {
   if (nodeEnv === 'production') return;
 
   const config = new DocumentBuilder()
-    .setTitle('Service Marketplace API')
+    .setTitle('Mini E-Commerce API')
     .setVersion('1.0.0')
     .addBearerAuth()
     .build();
@@ -158,8 +158,6 @@ export async function bootstrap() {
   logger.log(`App: http://localhost:${port}`);
   logger.log(`API: http://localhost:${port}/api/v1`);
   logger.log(`Docs: http://localhost:${port}/docs`);
-  logger.log(`Health: http://localhost:${port}/api/v1/health`);
-  logger.log(`Metrics: http://localhost:${port}/api/v1/metrics`);
 
   const shutdown = async () => {
     server.close(() => process.exit(0));
