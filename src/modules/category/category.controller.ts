@@ -125,7 +125,14 @@ export class CategoryController {
     @Body('name') name: string,
     @UploadedFile() image?: Express.Multer.File,
   ) {
-    return this.categoryService.updateCategory(id, name, image);
+    const result = await this.categoryService.updateCategory(id, name, image);
+
+    return {
+      success: true,
+      message: "Category Update Successfully",
+      data: result
+    }
+
   }
 
 }

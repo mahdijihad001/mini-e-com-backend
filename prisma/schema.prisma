@@ -30,6 +30,12 @@ enum PaymentStatus {
   FAILED
 }
 
+enum ProductStatus {
+  ACTIVE
+  DRAFT
+  ARCHIVED
+}
+
 model User {
   id           String   @id @default(uuid())
   name         String
@@ -50,17 +56,26 @@ model User {
 }
 
 model Product {
-  id          String  @id @default(uuid())
-  name        String
-  description String
-  price       Decimal
-  stock       Int
-  image       String
+  id                String        @id @default(uuid())
+  name              String
+  description       String
+  price             Decimal
+  discountPrice     Decimal?
+  stock             Int
+  lowStockThreshold Int?          @default(5)
+  images            String[]      @default([])
+  isFeatured        Boolean       @default(false)
+  status            ProductStatus @default(ACTIVE)
+  soldCount         Int           @default(0)
+  viewCount         Int           @default(0)
+  tags              String[]
 
   orderItems OrderItem[]
+  reviews    Review[]
 
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   category   Category? @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   categoryId String?
 
@@ -128,4 +143,14 @@ model Payment {
   createdAt DateTime @default(now())
 
   @@index([status])
+}
+
+model Review {
+  id        String   @id @default(uuid())
+  rating    Int
+  comment   String
+  userId    String
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
 }
