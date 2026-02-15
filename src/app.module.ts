@@ -6,6 +6,7 @@ import { UserModule } from './modules/user/user.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ConfigModule } from '@nestjs/config';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
+import { CategoryModule } from './modules/category/category.module';
 import envConfig from './config/env.config';
 
 @Module({
@@ -13,7 +14,7 @@ import envConfig from './config/env.config';
     isGlobal: true,
     load: [envConfig],
     cache: true
-  }), AuthModule, UserModule, CloudinaryModule],
+  }), AuthModule, UserModule, CloudinaryModule, CategoryModule],
   controllers: [AppController],
   providers: [AppService],
 })
