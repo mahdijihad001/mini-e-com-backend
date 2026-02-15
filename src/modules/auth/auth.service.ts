@@ -96,16 +96,25 @@ export class AuthService {
 
     }
 
-    async deleteUser(userId: string) {
-        const result = await this.prisma.user.delete({
+    async generateAccessTokenWitRefreshToken(token: string) {
+        const payload = await this.jwtService.verify(token, {
+            secret: this.configService.get<IEnv>("env")?.JWT.JWT_REFRESH_SECRET
+        });
+
+        if (!payload) throw new NotFoundException("Invalid Refresh Token");
+
+        const user = await this.prisma.user.findUnique({
             where: {
-                id: userId
+                id: payload.sub
             }
         });
 
-        if (!result) throw new NotFoundException(ERROR_MESSAGES.USER_NOT_FOUND);
-
-        return null;
+        if (!user || !user.refreshToken) {
+            throw new BadRequestException("Invalid Refresh Token");
+        }
+        const tokens = await this.generateTokens(user.id, user.email, user.role);
+        
+        return tokens.accessToekn;
 
     }
 

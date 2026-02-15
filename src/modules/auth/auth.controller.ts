@@ -6,6 +6,7 @@ import { SignUpDto } from './dto/signup.dto';
 import { SUCCESS_MESSAGES } from 'src/common/constants';
 import { JwtAuthGuard } from 'src/common/guards/jwt.auth.guards';
 import { AdminGuard } from 'src/common/guards/jwt.admin.guard';
+import { RefreshTokenDto } from './dto/refresh.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -41,58 +42,21 @@ export class AuthController {
     }
   };
 
-
-  @Get("get-me")
+  @Post("refresh_token")
   @ApiOperation({
-    summary: "Get Me"
+    summary: "Generate new access token use refresh token"
   })
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
-  async getMe(@Req() req: any) {
-    const user = req.user;
-    return {
-      success: true,
-      message: "Profile Retrived Success",
-      data: user
-    }
-  }
-
-  @Delete("user-delete")
-  @ApiOperation({
-    summary: "User Own Profile Delete"
-  })
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
-
-  async DeleteOwnProfile(@Req() req: any) {
-    const user = req.user;
-
-    await this.authService.deleteUser(user.id);
+  async refreshToken(@Body() data: RefreshTokenDto) {
+    const result = await this.authService.generateAccessTokenWitRefreshToken(data.token);
 
     return {
       success: true,
-      message: "User Deleted Success",
-      data: null
+      message: "Generate new accesstoken",
+      accessToken: result
     }
 
   }
 
-
-  @Delete('admin-user/:userId/delete')
-  @ApiOperation({
-    summary: "User profile delete (Only Can Do this Admin)"
-  })
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, AdminGuard)
-  async UserDeleteFormAdmin(@Param("userId") id: string) {
-    await this.authService.deleteUser(id);
-
-    return {
-      success: true,
-      message: "User Deleted Success"
-    }
-
-  }
 
 
 }
