@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateProductDto } from './dto/create.product.dto';
+import { UpdateProductDto } from './dto/update.product.dto';
 
 @Injectable()
 export class ProductService {
@@ -107,6 +108,68 @@ export class ProductService {
         return result;
     };
 
-    
+    async updateProduct(productId: string, data: UpdateProductDto, thumbnail?: Express.Multer.File, imgGallery?: Express.Multer.File[]) {
+        const product = await this.prisma.product.findUnique({
+            where: { id: productId },
+        });
+
+        if (!product) {
+            throw new NotFoundException("Product not found");
+        }
+
+        let finalThumbnail = product.thumbnail;
+
+        if (thumbnail) {
+            const uploaded: any = await this.cloudinary.uploadImageFromBuffer(thumbnail.buffer, "product", `product-${Date.now()}-${Math.random()}`);
+
+            finalThumbnail = uploaded.secure_url;
+        }
+
+        let newUploadedImages: string[] = [];
+
+        if (imgGallery && imgGallery.length > 0) {
+            newUploadedImages = await Promise.all(
+                imgGallery.map(async (file) => {
+                    const result: any = await this.cloudinary.uploadImageFromBuffer(file.buffer, "product", `product-gallery-${Date.now()}-${Math.random()}`);
+
+                    return result.secure_url;
+                })
+            );
+        }
+
+        let finalGallery = [...product.galleryImages];
+
+        if (newUploadedImages.length > 0) {
+            finalGallery = [...finalGallery, ...newUploadedImages];
+        }
+
+        if (data.removeGalleryImage?.length) {
+            finalGallery = finalGallery.filter(
+                (img) => !data.removeGalleryImage!.includes(img)
+            );
+        }
+
+
+        const updatedProduct = await this.prisma.product.update({
+            where: { id: productId },
+            data: {
+                //name: data.name !== undefined && data.name !== null ? data.name : product.name
+                name: data.name ?? product.name,
+                description: data.description ?? product.description,
+                price: data.price ?? product.price,
+                discountPrice: data.discountPrice ?? product.discountPrice,
+                stock: data.stock ?? product.stock,
+                isFeatured: data.isFeatured ?? product.isFeatured,
+                status: data.status ?? product.status,
+                tags: data.tags ?? product.tags,
+                productAdjective:
+                    data.productAdjective ?? product.productAdjective,
+                thumbnail: finalThumbnail,
+                galleryImages: finalGallery,
+            },
+        });
+
+        return updatedProduct;
+    }
 
 }
