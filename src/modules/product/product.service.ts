@@ -162,8 +162,7 @@ export class ProductService {
                 isFeatured: data.isFeatured ?? product.isFeatured,
                 status: data.status ?? product.status,
                 tags: data.tags ?? product.tags,
-                productAdjective:
-                    data.productAdjective ?? product.productAdjective,
+                productAdjective: data.productAdjective ?? product.productAdjective,
                 thumbnail: finalThumbnail,
                 galleryImages: finalGallery,
             },
