@@ -1,10 +1,11 @@
-import { BadRequestException, Body, Controller, Post, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Query, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ProductService } from './product.service';
-import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { CreateProductDto } from './dto/create.product.dto';
 import { JwtAuthGuard } from 'src/common/guards/jwt.auth.guards';
 import { AdminGuard } from 'src/common/guards/jwt.admin.guard';
+import { ProductStatus } from '@prisma/client';
 
 @Controller('product')
 export class ProductController {
@@ -48,7 +49,7 @@ export class ProductController {
           description: 'Optional gallery images (multiple files allowed)',
         },
       },
-      required: ['name', 'description', 'price', 'stock', 'thumbnailImage' , 'categoryId'],
+      required: ['name', 'description', 'price', 'stock', 'thumbnailImage', 'categoryId'],
     },
   })
   @UseInterceptors(
@@ -79,8 +80,51 @@ export class ProductController {
   }
 
 
+  @Get(':id')
+  @ApiOperation({ summary: 'Get single product by ID' })
+  @ApiParam({ name: 'id', example: 'product-id-123' })
+  async getSingleProduct(@Param('id') productId: string) {
+    const resullt = await this.productService.getSingleProduct(productId);
+    return {
+      success: true,
+      message: "Product retrived.",
+      data: resullt
+    }
+  }
 
 
+  @Get()
+  @ApiOperation({ summary: 'Get all products with pagination, search, and status filter' })
+  @ApiQuery({ name: 'page', example: 1 })
+  @ApiQuery({ name: 'limit', example: 10 })
+  @ApiQuery({ name: 'search', required: false, example: '' })
+  @ApiQuery({ name: 'status', required: false, enum: ProductStatus, example: ProductStatus.ACTIVE })
+  async getAllProducts(
+    @Query('page', ParseIntPipe) page: number = 1,
+    @Query('limit', ParseIntPipe) limit: number = 10,
+    @Query('search') search?: string,
+    @Query('status') status?: 'ACTIVE' | 'DRAFT' | 'ARCHIVED',
+  ) {
+    const result = await this.productService.getAllProduct(page, limit, search, status);
+    return {
+      success: true,
+      data: result
+    }
+  }
+
+
+  @Delete(':id')
+  @ApiOperation({ summary: 'Delete product by ID (Only Can Do Admin)' })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  @ApiParam({ name: 'id', example: 'product-id-123' })
+  async deleteProduct(@Param('id') productId: string) {
+    const result = await this.productService.deleteProduct(productId);
+    return {
+      success: true,
+      message: "Product Deleted"
+    }
+  }
 
 }
 
