@@ -8,6 +8,7 @@ import { ConfigModule } from '@nestjs/config';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { CategoryModule } from './modules/category/category.module';
 import { ProductModule } from './modules/product/product.module';
+import { CartModule } from './modules/cart/cart.module';
 import envConfig from './config/env.config';
 
 @Module({
@@ -15,7 +16,7 @@ import envConfig from './config/env.config';
     isGlobal: true,
     load: [envConfig],
     cache: true
-  }), AuthModule, UserModule, CloudinaryModule, CategoryModule, ProductModule],
+  }), AuthModule, UserModule, CloudinaryModule, CategoryModule, ProductModule, CartModule],
   controllers: [AppController],
   providers: [AppService],
 })

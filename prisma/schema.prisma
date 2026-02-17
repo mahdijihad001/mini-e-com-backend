@@ -46,7 +46,7 @@ model User {
   refreshToken String?
   role         UserRole @default(CUSTOMER)
 
-  cart   Cart?
+  cart   Cart[]
   orders Order[]
 
   createdAt DateTime @default(now())
@@ -78,6 +78,7 @@ model Product {
   updatedAt DateTime @updatedAt
 
   category Category? @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  carts    Cart[]
 
   @@index([stock])
   @@index([status])
@@ -92,16 +93,17 @@ model Category {
   product Product[]
 
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 
   @@index([createdAt])
 }
 
 model Cart {
-  id     String @id @default(uuid())
-  userId String @unique
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id        String  @id @default(uuid())
+  userId    String
+  productId String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
