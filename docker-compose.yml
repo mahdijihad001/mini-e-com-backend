@@ -1,0 +1,34 @@
+# name: chessus-server
+# version: '3.9'
+
+# services:
+#   app:
+#     build:
+#       context: .
+#       dockerfile: Dockerfile
+#     image: arafat2025/ink:latest
+#     platform: linux/amd64
+#     container_name: ink-app
+#     restart: unless-stopped
+#     env_file:
+#       - .env
+#     ports:
+#       - "5001:5001"
+#     command: sh -c "npx prisma migrate deploy && node dist/src/main.js"
+
+#   postgres:
+#     image: postgres:15
+#     container_name: chessus_db
+#     restart: always
+#     ports:
+#       - '5432:5432'
+#     environment:
+#       POSTGRES_USER: ${POSTGRES_USER}
+#       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+#       POSTGRES_DB: ${POSTGRES_DB}
+#     volumes:
+#       - postgres_data:/var/lib/postgresql/data
+
+# volumes:
+#   postgres_data:
+#    name: chessus-server_postgres_data

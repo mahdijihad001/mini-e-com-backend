@@ -44,7 +44,7 @@ export class CartController {
   @ApiBearerAuth()
   @ApiParam({ name: "id", example: "cart Id" })
   @UseGuards(JwtAuthGuard)
-  async removeItemFromCart(@Param("id") cartId: string, @Req() req: any) {
+  async removeItemFromCart(@Param("id") cartId: string, @Req() req: any){
 
     const userId = req.user.id;
 
@@ -54,9 +54,8 @@ export class CartController {
       success: true,
       message: "Item remove from cart"
     }
-
   }
 
-
+  
 
 }
