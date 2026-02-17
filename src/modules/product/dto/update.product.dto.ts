@@ -1,25 +1,25 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsArray, IsBoolean, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, Min } from "class-validator";
+import { IsArray, IsBoolean, IsEnum, IsNumber, IsOptional, IsString, Min } from "class-validator";
 import { Transform, Type } from "class-transformer";
 import { ProductStatus } from "@prisma/client";
 
 export class UpdateProductDto {
 
     @ApiProperty({ example: "Wireless Headphones" })
-    @IsNotEmpty()
+    @IsOptional()
     @IsString()
-    name: string;
+    name?: string;
 
     @ApiProperty({ example: "High quality headphone" })
-    @IsNotEmpty()
+    @IsOptional()
     @IsString()
-    description: string;
+    description?: string;
 
     @ApiProperty({ example: 500 })
-    @IsNotEmpty()
+    @IsOptional()
     @IsNumber()
     @Type(() => Number)
-    price: number;
+    price?: number;
 
     @ApiProperty({ example: 450, required: false })
     @IsOptional()
@@ -28,11 +28,11 @@ export class UpdateProductDto {
     discountPrice?: number;
 
     @ApiProperty({ example: 20 })
-    @IsNotEmpty()
+    @IsOptional()
     @IsNumber()
     @Type(() => Number)
     @Min(0)
-    stock: number;
+    stock?: number;
 
     @IsOptional()
     @IsArray()
@@ -45,17 +45,22 @@ export class UpdateProductDto {
     @Transform(({ value }) => (Array.isArray(value) ? value : [value]))
     productAdjective?: string[];
 
-    @ApiProperty({ example: false })
+    @ApiProperty({ example: false, required: false })
+    @IsOptional()
+    @Transform(({ value }) => value === "true" || value === true)
     @IsBoolean()
-    isFeatured: boolean
+    isFeatured?: boolean;
 
-    @ApiProperty({
-        enum: ProductStatus,
-        example: ProductStatus.ACTIVE
-    })
-    @IsString()
-    @IsEnum(ProductStatus)
-    status: ProductStatus
+
+    // @ApiProperty({
+    //     enum: ProductStatus,
+    //     example: ProductStatus.ACTIVE,
+    //     required: false
+    // })
+    // @IsOptional()
+    // @Transform(({ value }) => value?.toUpperCase())
+    // @IsEnum(ProductStatus)
+    // status?: ProductStatus;
 
     @ApiProperty({ example: ["product img link", "product img link"] })
     @IsOptional()

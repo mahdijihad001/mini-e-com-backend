@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Query, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, NotFoundException, Param, ParseIntPipe, Patch, Post, Query, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ProductService } from './product.service';
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
@@ -6,11 +6,12 @@ import { CreateProductDto } from './dto/create.product.dto';
 import { JwtAuthGuard } from 'src/common/guards/jwt.auth.guards';
 import { AdminGuard } from 'src/common/guards/jwt.admin.guard';
 import { ProductStatus } from '@prisma/client';
+import { UpdateProductDto } from './dto/update.product.dto';
+import { ProductStatusDto } from './dto/productStatus.dto';
 
 @Controller('product')
 export class ProductController {
   constructor(private readonly productService: ProductService) { }
-
 
   @Post('create-product')
   @ApiOperation({ summary: 'Create product with thumbnail and optional gallery images (Only Can Admin Do This)' })
@@ -80,7 +81,7 @@ export class ProductController {
   }
 
 
-  @Get(':id')
+  @Get(':id/single-product')
   @ApiOperation({ summary: 'Get single product by ID' })
   @ApiParam({ name: 'id', example: 'product-id-123' })
   async getSingleProduct(@Param('id') productId: string) {
@@ -93,7 +94,7 @@ export class ProductController {
   }
 
 
-  @Get()
+  @Get('all-product-list')
   @ApiOperation({ summary: 'Get all products with pagination, search, and status filter' })
   @ApiQuery({ name: 'page', example: 1 })
   @ApiQuery({ name: 'limit', example: 10 })
@@ -113,7 +114,7 @@ export class ProductController {
   }
 
 
-  @Delete(':id')
+  @Delete(':id/delete-product')
   @ApiOperation({ summary: 'Delete product by ID (Only Can Do Admin)' })
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, AdminGuard)
@@ -125,6 +126,94 @@ export class ProductController {
       message: "Product Deleted"
     }
   }
+
+
+  @Patch("update/:id/product")
+  @ApiOperation({ summary: "Update product (Only Can Admin do this)" })
+  @ApiParam({ name: "id", example: "product-id" })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  @ApiConsumes("multipart/form-data")
+  @ApiBody({
+    required: false,
+    schema: {
+      type: "object",
+      properties: {
+        name: { type: "string", example: "Wireless Headphones" },
+        description: { type: "string", example: "High quality headphone" },
+        price: { type: "number", example: 500 },
+        discountPrice: { type: "number", example: 450 },
+        stock: { type: "number", example: 20 },
+        isFeatured: { type: "boolean", example: false },
+        // status: {
+        //   type: "string",
+        //   enum: ["ACTIVE", "DRAFT", "ARCHIVED"],
+        //   example: "ACTIVE"
+        // },
+        tags: {
+          type: "array",
+          items: { type: "string" },
+          example: ["electronics", "audio"]
+        },
+        productAdjective: {
+          type: "array",
+          items: { type: "string" },
+          example: ["wireless", "noise-cancelling"]
+        },
+        removeGalleryImage: {
+          type: "array",
+          items: { type: "string" },
+          example: ["https://image-link.com/image1.jpg"]
+        },
+
+        thumbnailImage: {
+          type: "string",
+          format: "binary"
+        },
+
+        galleryImages: {
+          type: "array",
+          items: {
+            type: "string",
+            format: "binary"
+          }
+        }
+      }
+    }
+  })
+  @UseInterceptors(FileFieldsInterceptor([{ name: "thumbnailImage", maxCount: 1 }, { name: "galleryImages", maxCount: 5 }]))
+  async updateProduct(@Param("id") id: string, @Body() dto: UpdateProductDto, @UploadedFiles() files: { thumbnailImage?: Express.Multer.File[], galleryImages?: Express.Multer.File[] }) {
+
+    const thumbnail = files?.thumbnailImage?.[0];
+    const galleryImages = files?.galleryImages;
+
+    const result = await this.productService.updateProduct(id, dto, thumbnail, galleryImages);
+
+    return {
+      success: true,
+      message: "Product updated",
+      data: result
+    }
+  };
+
+
+  @Patch("status/:proiductId/update")
+  @ApiOperation({ summary: "Product Status update (Only Can Admin)" })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  @ApiParam({ name: "proiductId", example: "product-id" })
+  async updateProductStatus(@Body() data: ProductStatusDto, @Param("proiductId") proiductId: string) {
+
+    if (!data.status) throw new BadRequestException("Status must be required");
+
+    const result = await this.productService.updateProductStatus(proiductId, data.status);
+
+    return {
+      success: true,
+      message: `${result.name} status has been updated to ${result.status}.`,
+      data: result
+    }
+  }  
 
 }
 
