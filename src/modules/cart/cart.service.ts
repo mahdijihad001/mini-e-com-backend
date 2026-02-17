@@ -32,7 +32,9 @@ export class CartService {
         await this.prisma.cart.create({
             data: {
                 productId: data.productId,
-                userId: userId
+                userId: userId,
+                price: data.price,
+                quantity: data.quantity
             }
         });
 
