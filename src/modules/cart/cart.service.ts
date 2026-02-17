@@ -16,6 +16,15 @@ export class CartService {
 
         if (!product) throw new NotFoundException("Product Not exist.");
 
+        const isExistProduct = await this.prisma.cart.findFirst({
+            where: {
+                productId: data.productId,
+                userId: userId
+            }
+        });
+
+        if (isExistProduct) throw new BadRequestException("Already exist this product in the cart");
+
         if (product.status !== "ACTIVE") {
             throw new BadRequestException(`Sorry, this product cannot be added to the cart at this moment`);
         }
