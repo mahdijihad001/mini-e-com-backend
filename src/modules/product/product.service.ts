@@ -160,7 +160,7 @@ export class ProductService {
                 discountPrice: data.discountPrice ?? product.discountPrice,
                 stock: data.stock ?? product.stock,
                 isFeatured: data.isFeatured ?? product.isFeatured,
-                status: data.status ?? product.status,
+                // status: data.status ?? product.status,
                 tags: data.tags ?? product.tags,
                 productAdjective: data.productAdjective ?? product.productAdjective,
                 thumbnail: finalThumbnail,
@@ -170,5 +170,31 @@ export class ProductService {
 
         return updatedProduct;
     }
+
+    async updateProductStatus(productId: string, status: "ACTIVE" | "DRAFT" | "ARCHIVED") {
+
+        const product1 = await this.prisma.product.findUnique({
+            where: {
+                id: productId
+            }
+        });
+
+        
+        if (!product1) throw new NotFoundException("Product not found");
+
+        const product = await this.prisma.product.update({
+            where: {
+                id: productId
+            },
+            data: {
+                status: status
+            }
+        });
+
+
+        return product;
+
+    }
+
 
 }
