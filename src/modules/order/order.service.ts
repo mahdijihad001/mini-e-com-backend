@@ -1,6 +1,5 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { PlaceOrderDto } from './dto/place.order.dto';
 
 @Injectable()
 export class OrderService {
@@ -22,8 +21,10 @@ export class OrderService {
             }
         });
 
+        if (findItem.length === 0) throw new BadRequestException("Your cart is empty. Please add items before proceeding.");
+
         const totalAmnount = findItem.reduce((total, item) => {
-            return total + (Number(item.price) * item.quantity)
+            return total + (Number(item.price) * Number(item.quantity))
         }, 0)
 
         await this.prisma.order.update({
@@ -35,8 +36,19 @@ export class OrderService {
             }
         });
 
-        if (findItem.length) {
-            findItem.map(async (item) => await this.prisma.orderItem.create({
+        // if (findItem.length) {
+        //     findItem.map(async (item) => await this.prisma.orderItem.create({
+        //         data: {
+        //             orderId: order.id,
+        //             productId: item.productId,
+        //             price: item.price,
+        //             quantity: item.quantity
+        //         }
+        //     }))
+        // };
+
+        await Promise.all(
+            findItem.map((item) => this.prisma.orderItem.create({
                 data: {
                     orderId: order.id,
                     productId: item.productId,
@@ -44,7 +56,7 @@ export class OrderService {
                     quantity: item.quantity
                 }
             }))
-        };
+        )
 
         const cretePayment = await this.prisma.payment.create({
             data: {
@@ -57,5 +69,77 @@ export class OrderService {
         return cretePayment;
 
     }
+
+    async updateOrderStatus(orderId: string, status: "FAILED" | "PENDING" | "PROCESS" | "SHIPPED" | "DELIVERED") {
+        const order = await this.prisma.order.findUnique({
+            where: {
+                id: orderId
+            }
+        });
+
+        if (!order) throw new NotFoundException("Order not found");
+
+        const update = await this.prisma.order.update({
+            where: {
+                id: orderId
+            },
+            data: {
+                status: status
+            }
+        });
+
+        return update;
+
+    };
+
+
+    async getMyOrderList(userId: string) {
+        const OrderList = await this.prisma.order.findMany({
+            where: {
+                userId: userId
+            },
+            include: {
+                items: true
+            }
+        });
+
+        return OrderList;
+
+    }
+
+
+    async getAllOrderListForAdmin(page: number, limit: number, status?: "FAILED" | "PENDING" | "PROCESS" | "SHIPPED" | "DELIVERED") {
+
+        const skip = (page - 1) * limit;
+
+        const filter: any = {};
+
+        if (status) {
+            filter.status = status
+        }
+
+        const total = await this.prisma.order.count({ where: filter });
+
+        const orders = await this.prisma.order.findMany({
+            where: filter,
+            skip: skip,
+            take: limit
+        });
+
+        return {
+            success: true,
+            data: {
+                pagination: {
+                    total: total,
+                    totalPage: Math.ceil(total / limit),
+                    page: page,
+                    limit: limit
+                },
+                data: orders
+            }
+        }
+
+    }
+
 
 }
