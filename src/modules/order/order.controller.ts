@@ -54,6 +54,21 @@ export class OrderController {
     }
   };
 
+  @Get("single/:orderId/list")
+  @ApiOperation({ summary: "Single order list" })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @ApiParam({ name: "orderId", required: true, example: "order id" })
+  async getSingleOrderList(@Param("orderId") orderId: string) {
+    const result = await this.orderService.getSingleOrder(orderId);
+
+    return {
+      success: true,
+      data: result
+    }
+
+  }
+
 
   @Get("all-order-list")
   @ApiOperation({ summary: "All order list for Admin" })

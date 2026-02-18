@@ -99,7 +99,16 @@ export class OrderService {
                 userId: userId
             },
             include: {
-                items: true
+                user: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        phone: true,
+                        profile: true,
+                        role: true
+                    }
+                }
             }
         });
 
@@ -107,6 +116,39 @@ export class OrderService {
 
     }
 
+    async getSingleOrder(orderId: string) {
+        const order = await this.prisma.order.findUnique({
+            where: {
+                id: orderId
+            },
+            include: {
+                user: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        phone: true,
+                        profile: true,
+                        role: true
+                    }
+                },
+                items: {
+                    include : {
+                        product : {
+                            select : {
+                                name : true,
+                                thumbnail : true
+                            }
+                        }
+                    }
+                },
+            }
+        });
+
+        if (!order) throw new NotFoundException("Order not found");
+
+        return order;
+    }
 
     async getAllOrderListForAdmin(page: number, limit: number, status?: "FAILED" | "PENDING" | "PROCESS" | "SHIPPED" | "DELIVERED") {
 
@@ -140,6 +182,4 @@ export class OrderService {
         }
 
     }
-
-
 }
