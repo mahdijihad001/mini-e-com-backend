@@ -68,5 +68,30 @@ export class CartService {
 
     }
 
+    async updateCartQuantity(userId: string, cartId: string, quantity: number) {
+        const findCart = await this.prisma.cart.findUnique({
+            where: {
+                id: cartId
+            }
+        });
+
+        if (!findCart) throw new NotFoundException("Cart not found");
+
+        if (findCart.userId !== userId) throw new BadRequestException("You are not permited access this route.");
+
+        if (quantity <= 0) throw new BadRequestException("Quentity must be greater then 0.")
+
+        const update = await this.prisma.cart.update({
+            where: {
+                id: cartId
+            },
+            data: {
+                quantity
+            }
+        })
+
+        return update
+
+    }
 
 }
