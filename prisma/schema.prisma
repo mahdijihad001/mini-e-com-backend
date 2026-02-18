@@ -19,6 +19,7 @@ enum UserRole {
 }
 
 enum OrderStatus {
+  FAILED
   PENDING
   PROCESS
   SHIPPED
@@ -104,7 +105,7 @@ model Cart {
   userId    String
   productId String
   price     Int
-  quantity  Int 
+  quantity  Int
   user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
@@ -119,7 +120,7 @@ model Order {
   id          String      @id @default(uuid())
   userId      String
   totalAmount Decimal?
-  status      OrderStatus @default(PENDING)
+  status      OrderStatus @default(FAILED)
 
   user    User        @relation(fields: [userId], references: [id])
   items   OrderItem[]
